@@ -144,6 +144,8 @@ class Condition {
 
   private:
     const char* name;
+    Lock* conditionLock;
+    List<Thread*> *queue;
     // plus some other stuff you'll need to define
 };
 

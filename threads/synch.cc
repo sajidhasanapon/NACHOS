@@ -153,10 +153,10 @@ void Lock::Acquire()
 
 void Lock::Release()
 {
-    Thread *thread;
-    ASSERT(isHeldByCurrentThread());
-
+    Thread* thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+    ASSERT(isHeldByCurrentThread());
 
     thread = queue->Remove();
     if (thread != NULL)	              // make thread ready
@@ -164,6 +164,7 @@ void Lock::Release()
 
     isHeldBySome = false;
     currentHolder = NULL;
+
     interrupt->SetLevel(oldLevel);
 }
 
@@ -194,13 +195,79 @@ bool Lock::isHeldByCurrentThread()
 
 
 
-Condition::Condition(const char* debugName, Lock* conditionLock) { }
-Condition::~Condition() { }
+Condition::Condition(const char* debugName, Lock* conditionLock)
+{
+    name = debugName;
+    this->conditionLock = conditionLock;
+    queue = new List<Thread*>;
+}
+
+
+Condition::~Condition()
+{
+    delete queue;
+}
+
+
 void Condition::Wait()
 {
-    ASSERT(false);
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+	ASSERT(conditionLock->isHeldByCurrentThread());
+
+	queue->Append(currentThread);
+    conditionLock->Release();
+	currentThread->Sleep();
+
+    conditionLock->Acquire(); // Simply Releasing the Lock will not do everything. We assume that the caller does not
+                     // know about what is going on in Condition::Wait() function. So if we release the Lock
+                     // object in wait function we must again acquire it before returning to the caller
+                     // (setting the Lock in its previous state).
+
+    (void)interrupt->SetLevel(oldLevel);
+
+
+    //ASSERT(false);    // Dunno what it is for. It was here from the start.
 }
-void Condition::Signal() { }
-void Condition::Broadcast() { }
+
+void Condition::Signal()
+{
+    Thread* thread;
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+	ASSERT(conditionLock->isHeldByCurrentThread());
+
+	thread = queue->Remove();
+	if (thread != NULL)
+	{
+		scheduler->ReadyToRun(thread);
+	}
+
+    interrupt->SetLevel(oldLevel);
+}
+
+
+void Condition::Broadcast()
+{
+    Thread* thread;
+	IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+	ASSERT(conditionLock->isHeldByCurrentThread());
+
+	while(true)
+    {
+        thread = queue->Remove();
+        if (thread != NULL)
+        {
+            scheduler->ReadyToRun(thread);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    interrupt->SetLevel(oldLevel);
+}
 
 

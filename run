@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd threads
+make clean
+make depend
+make
+cd ../
+make
+cd threads
+./nachos
+cd ..
