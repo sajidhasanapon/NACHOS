@@ -1,16 +1,34 @@
+
+#ifndef PRODUCER_H
+#define PRODUCER_H
+
+
+
+
+#include "system.h"
 #include "synch.h"
+#include "sharedBuffer.h"
 
 class Producer
 {
 private:
     const char* name;                      // debugging purpose
     Lock* tableAccessLock;                  // Permission for going to food table
-    Condition* tableHandlingCondition;      // After going to food table, permission to put food there
+    Condition* produceCondition;
+    Condition* consumeCondition;
+    SharedBuffer* foodTable;
+    int foodNumber;
+
 
     void produce();
 
 
 public:
-    Producer(const char* debugName, Lock* tableLock, Condition* tableCondition);
+    Producer(const char* debugName, Lock* tableLock,
+                Condition* produceCondition, Condition* consumeCondition, SharedBuffer* foodTable);
     void startProducing();
 };
+
+
+
+#endif // PRODUCER_H

@@ -51,7 +51,8 @@ THREAD_H =../threads/copyright.h\
 	../machine/timer.h\
 	../threads/preemptive.h\
 	../threads/producer.h\
-	../threads/consumer.h
+	../threads/consumer.h\
+	../threads/sharedBuffer.h
 
 
 THREAD_C =../threads/main.cc\

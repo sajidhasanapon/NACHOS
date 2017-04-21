@@ -1,15 +1,31 @@
+#ifndef CONSUMER_H
+#define CONSUMER_H
+
+
+
+
+
+
+#include "system.h"
 #include "synch.h"
+#include "sharedBuffer.h"
 
 class Consumer
 {
 private:
     const char* name;                      // debugging purpose
     Lock* tableAccessLock;                  // Permission for going to food table
-    Condition* tableHandlingCondition;      // After going to food table, permission to consume food
+    Condition* produceCondition;
+    Condition* consumeCondition;
+    SharedBuffer* foodTable;
 
     void consume();
 
 public:
-    Consumer(const char* debugName, Lock* tableLock, Condition* tableCondition);
+    Consumer(const char* debugName, Lock* tableLock,
+             Condition* produceCondition, Condition* consumeCondition, SharedBuffer* foodTable);
     void startConsuming();
 };
+
+
+#endif // CONSUMER_H

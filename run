@@ -1,11 +1,11 @@
 #!/bin/bash
 
-cd threads
 make clean
+cd threads
 make depend
 make
 cd ../
 make
 cd threads
-./nachos
+./nachos -rs 2
 cd ..
