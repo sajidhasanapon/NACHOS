@@ -57,19 +57,17 @@ SimpleThread(void* name)
 }
 
 
-void
-startProd(void* arg)
+void StartProducing(void* argument)
 {
-    Producer* p = (Producer*) arg;
-    p->startProducing();
+    Producer* p = (Producer*) argument;
+    p->StartProducing();
 }
 
 
-void
-startCons(void* arg)
+void StartConsuming(void* argument)
 {
-    Consumer* p = (Consumer*) arg;
-    p->startConsuming();
+    Consumer* c = (Consumer*) argument;
+    c->StartConsuming();
 }
 
 
@@ -99,6 +97,10 @@ startCons(void* arg)
 void
 ThreadTest()
 {
+    int PRODUCER_CNT = 3;
+    int CONSUMER_CNT = 5;
+    int BUFFER_SIZE = 10;
+
     DEBUG('t', "Entering SimpleTest");
 
     Lock* tableLock = new Lock("Table lock");
@@ -106,32 +108,30 @@ ThreadTest()
     Lock* productionLock = new Lock("Production lock");
     Lock* consumptionLock = new Lock("Consumption lock");
 
-//    Condition* productionCondition = new Condition("Production Condition", productionLock);
-//    Condition* consumptionCondition = new Condition("Consumption Condition", consumptionLock);
-
     Condition* productionCondition = new Condition("Production Condition", tableLock);
     Condition* consumptionCondition = new Condition("Consumption Condition", tableLock);
 
-    SharedBuffer* foodTable = new SharedBuffer(5);
-
-    Producer* prod1 = new Producer("Producer 1", tableLock, productionCondition, consumptionCondition, foodTable);
-    Thread* producerThread1 = new Thread("Producer Thread 1");
-    producerThread1->Fork(startProd, (void*)prod1);
-
-    Producer* prod2 = new Producer("Producer 2", tableLock, productionCondition, consumptionCondition, foodTable);
-    Thread* producerThread2 = new Thread("Producer Thread 2");
-    producerThread2->Fork(startProd, (void*)prod2);
-
-    Consumer* cons = new Consumer("Consumer", tableLock, productionCondition, consumptionCondition, foodTable);
-    Thread* consumerThread = new Thread("Consumer Thread");
-    consumerThread->Fork(startCons, (void*)cons);
+    SharedBuffer* foodTable = new SharedBuffer(BUFFER_SIZE);
 
 
-//    Thread* producerThread = new Thread("Producer Thread");
-//    Thread* consumerThread = new Thread("Consumer Thread");
-//
-//    producerThread->Fork(prod->startProducing, (void*)"hudai");
-//    consumerThread->Fork(cons->startConsuming, (void*)"hudai");
+    for (int i = 1; i <= PRODUCER_CNT; i++)
+    {
+      char* producerName = new char[50];
+      sprintf(producerName, "Producer %d", i);
+      Producer* producer = new Producer(producerName, tableLock, productionCondition, consumptionCondition, foodTable);
+      Thread* newThread = new Thread (producerName);
+      newThread->Fork (StartProducing, (void*)producer);
+    }
+
+    for (int i = 1; i <= CONSUMER_CNT; i++)
+    {
+      char* consumerName = new char[50];
+      sprintf(consumerName, "Consumer %d", i);
+      Consumer* consumer = new Consumer(consumerName, tableLock, productionCondition, consumptionCondition, foodTable);
+      Thread* newThread = new Thread (consumerName);
+      newThread->Fork (StartConsuming, (void*)consumer);
+    }
+
 
 
 //    for ( int k=1; k<=10; k++) {

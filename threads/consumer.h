@@ -19,12 +19,12 @@ private:
     Condition* consumeCondition;
     SharedBuffer* foodTable;
 
-    void consume();
+    void Consume();
 
 public:
     Consumer(const char* debugName, Lock* tableLock,
              Condition* produceCondition, Condition* consumeCondition, SharedBuffer* foodTable);
-    void startConsuming();
+    void StartConsuming();
 };
 
 

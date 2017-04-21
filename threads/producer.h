@@ -17,16 +17,17 @@ private:
     Condition* produceCondition;
     Condition* consumeCondition;
     SharedBuffer* foodTable;
-    int foodNumber;
+
+    static int foodNumber;
 
 
-    void produce();
+    void Produce();
 
 
 public:
     Producer(const char* debugName, Lock* tableLock,
                 Condition* produceCondition, Condition* consumeCondition, SharedBuffer* foodTable);
-    void startProducing();
+    void StartProducing();
 };
 
 

@@ -2,7 +2,8 @@
 #ifndef SHAREDBUFFER_H
 #define SHAREDBUFFER_H
 
-
+#define PRODUCTION_DELAY    100000000
+#define CONSUMPTION_DELAY    60000000
 
 #include <queue>
 using namespace std;

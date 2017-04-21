@@ -9,23 +9,24 @@ Consumer::Consumer(const char* debugName, Lock* tableLock, Condition* produceCon
     this->foodTable = foodTable;
 }
 
-void Consumer::consume()
+void Consumer::Consume()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
 
-    for(long i = 0; i <= 10000000; i++) {}
+    for(long i = 0; i < CONSUMPTION_DELAY; i++) {}
 
     tableAccessLock->Acquire();
 
     if(foodTable->IsEmpty())
     {
+        printf("\n\n---------------Table empty. %s is blocked---------------\n\n\n", currentThread->getName());
         consumeCondition->Wait();
     }
 
     else
     {
         int foodNumber = foodTable->get();
-        printf("%s consumed %d\n", name, foodNumber);
+        printf("[---]   %s consumed %d\n", name, foodNumber);
         produceCondition->Signal();
     }
 
@@ -33,19 +34,19 @@ void Consumer::consume()
 
     interrupt->SetLevel(oldLevel);		// re-enable interrupts
 
-    for(long i = 0; i <= 10000000; i++) {}
+    for(long i = 0; i < CONSUMPTION_DELAY; i++) {}
 }
 
 
-void Consumer::startConsuming()
+void Consumer::StartConsuming()
 {
-//    while(true)
-//    {
-//        consume();
-//    }
-
-    for(int i = 0; i<10; i++)
+    while(true)
     {
-        consume();
+        Consume();
     }
+
+//    for(int i = 0; i<10; i++)
+//    {
+//        Consume();
+//    }
 }
