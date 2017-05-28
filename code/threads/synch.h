@@ -42,7 +42,7 @@ class Semaphore
 public:
     Semaphore(const char* debugName, int initialValue);	// set initial value
     ~Semaphore();   					                    // de-allocate semaphore
-    const char* getName()
+    const char* GetName()
     {
         return name;   // debugging assist
     }
@@ -75,7 +75,7 @@ class Lock
 public:
     Lock(const char* debugName);                     // initialize lock to be FREE
     ~Lock();                                          // deallocate lock
-    const char* getName()
+    const char* GetName()
     {
         return name;    // debugging assist
     }
@@ -84,10 +84,10 @@ public:
     void Release();   // they are both *atomic*
 
 
-    bool isHeldByCurrentThread();     // true if the current thread
-    // holds this lock.  Useful for
-    // checking in Release, and in
-    // Condition variable ops below.
+    bool IsHeldByCurrentThread();     // true if the current thread
+                                      // holds this lock.  Useful for
+                                      // checking in Release, and in
+                                      // Condition variable ops below.
 
 
 private:
@@ -140,25 +140,24 @@ public:
 
     ~Condition();                                                     // deallocate the condition
 
-    const char* getName()
+    const char* GetName()
     {
-        return (name);
+        return name;
     }
 
     void Wait();        // these are the 3 operations on
-    // condition variables; releasing the
-    // lock and going to sleep are
-    // *atomic* in Wait()
-    void Signal();      // conditionLock must be held by
-    void Broadcast();   // the currentThread for all of
-    // these operations
+    void Signal();      // condition variables; releasing the
+    void Broadcast();   // lock and going to sleep are
+                        // *atomic* in Wait()
+                        // conditionLock must be held by
+                        // the currentThread for all of
+                        // these operations
 
 
 private:
     const char* name;
     Lock* conditionLock;
     List<Thread*> *queue;
-    // plus some other stuff you'll need to define
 };
 
 #endif // SYNCH_H

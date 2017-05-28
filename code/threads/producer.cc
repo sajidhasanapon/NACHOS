@@ -27,7 +27,7 @@ void Producer::Produce()
 
     else
     {
-        foodTable->put(foodNumber);
+        foodTable->PutItem(foodNumber);
         printf("[+++]   %s produced %d\n", name, foodNumber);
         consumeCondition->Signal();
         foodNumber++;

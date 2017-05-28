@@ -20,9 +20,9 @@ public:
 
     bool IsEmpty();
 
-    void put(int item);
+    void PutItem(int item);
 
-    int get();
+    int GetItem();
 };
 
 #endif // SHAREDBUFFER_H

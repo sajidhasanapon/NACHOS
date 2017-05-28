@@ -25,7 +25,7 @@ void Consumer::Consume()
 
     else
     {
-        int foodNumber = foodTable->get();
+        int foodNumber = foodTable->GetItem();
         printf("[---]   %s consumed %d\n", name, foodNumber);
         produceCondition->Signal();
     }

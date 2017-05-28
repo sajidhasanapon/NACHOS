@@ -16,12 +16,12 @@ bool SharedBuffer::IsEmpty()
     return buffer.size() == 0;
 }
 
-void SharedBuffer::put(int item)
+void SharedBuffer::PutItem(int item)
 {
     buffer.push(item);
 }
 
-int SharedBuffer::get()
+int SharedBuffer::GetItem()
 {
     int item = buffer.front();
     buffer.pop();

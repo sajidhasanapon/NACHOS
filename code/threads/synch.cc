@@ -158,7 +158,7 @@ void Lock::Acquire()
 
     interrupt->SetLevel(oldLevel);		// re-enable interrupts
 
-    //printf("Lock : %s acquired by thread : %s\n", name, currentHolder->getName());
+    //printf("Lock : %s acquired by thread : %s\n", name, currentHolder->GetName());
 }
 
 
@@ -167,13 +167,13 @@ void Lock::Release()
     Thread* thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    ASSERT(isHeldByCurrentThread());
+    ASSERT(IsHeldByCurrentThread());
 
     thread = queue->Remove();
     if (thread != NULL)	              // make thread ready
         scheduler->ReadyToRun(thread);
 
-    //printf("Lock : %s released by thread : %s\n", name, currentHolder->getName());
+    //printf("Lock : %s released by thread : %s\n", name, currentHolder->GetName());
 
     isHeldBySome = false;
     currentHolder = NULL;
@@ -183,7 +183,7 @@ void Lock::Release()
 }
 
 
-bool Lock::isHeldByCurrentThread()
+bool Lock::IsHeldByCurrentThread()
 {
     if(currentThread == currentHolder ) return true;
     else return false;
@@ -221,7 +221,7 @@ void Condition::Wait()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    ASSERT(conditionLock->isHeldByCurrentThread());
+    ASSERT(conditionLock->IsHeldByCurrentThread());
 
     queue->Append(currentThread);
     conditionLock->Release();
@@ -243,7 +243,7 @@ void Condition::Signal()
     Thread* thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    ASSERT(conditionLock->isHeldByCurrentThread());
+    ASSERT(conditionLock->IsHeldByCurrentThread());
 
     thread = queue->Remove();
     if (thread != NULL)
@@ -260,7 +260,7 @@ void Condition::Broadcast()
     Thread* thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    ASSERT(conditionLock->isHeldByCurrentThread());
+    ASSERT(conditionLock->IsHeldByCurrentThread());
 
     while(true)
     {
@@ -277,5 +277,3 @@ void Condition::Broadcast()
 
     interrupt->SetLevel(oldLevel);
 }
-
-
