@@ -15,35 +15,41 @@
 
 #include "copyright.h"
 #include "filesys.h"
-#include "memoryManager.h"
-#include "processTable.h"
+#include "noff.h"
+#include "swap.h" // includes filesys.h
 
 #define UserStackSize		1024 	// increase this as necessary!
 
 class AddrSpace
 {
   public:
-    AddrSpace(OpenFile *executable);	// Create an address space,
-                                        // initializing it with the program
-                                        // stored in the file "executable"
-    ~AddrSpace();			            // De-allocate an address space
+    AddrSpace(OpenFile *executable, int spaceID);   // Create an address space,
+                                                    // initializing it with the program
+                                                    // stored in the file "executable"
+
+    ~AddrSpace();			                              // De-allocate an address space
 
     void InitRegisters();		// Initialize user-level CPU registers,
-					// before jumping to user code
+					                  // before jumping to user code
 
-    void SaveState();			// Save/restore address space-specific
+    void SaveState();		  	// Save/restore address space-specific
     void RestoreState();		// info on a context switch
-    int getThreadID();
-    void setThreadID(int id);
-    int TranslateAddress ( int virtAddr);
-	void ReleaseMemory();
+    int TranslateAddress (int virtualAddress);
+  	void ReleaseMemory();
+    void LoadPage(unsigned int pageNumber);
+
+    void LoadIntoMemoryFromFile(unsigned int pageNumber, int frameNumber);
+    void ForcedEvict(int pageNumber);
 
   private:
-    TranslationEntry *pageTable;	// Assume linear page table translation
-					// for now!
-    unsigned int numPages;		// Number of pages in the virtual
-					// address space
-    int threadID;
+    TranslationEntry *pageTable;    // Assume linear page table translation
+					                          // for now!
+    unsigned int numPages;          // Number of pages in the virtual
+					                          // address space
+
+    int spaceID;                    // equals to threadID
+    OpenFile* executable;           // the exe of the current process
+    SwapFile* swapFile;             // name says it all!
 };
 
 #endif // ADDRSPACE_H

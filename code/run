@@ -8,7 +8,7 @@ echo ""
 echo ""
 
 cd userprog
-./nachos -d e -x ../test/"$1"
+./nachos -d x -x ../test/"$1"
 
 cd ..
 

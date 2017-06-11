@@ -10,6 +10,8 @@
 
 #include "copyright.h"
 #include "system.h"
+#include "memoryManager.h"
+#include "processTable.h"
 #include "addrspace.h"
 #include "synchronizedConsole.h"
 #include "synch.h"
@@ -19,8 +21,8 @@ MemoryManager* memoryManager;   // the global memory manager
 // used across the kernel
 
 ProcessTable* processTable;     // the global process tableSize
-// used across the kernel
-// holds pointers to the running threads
+                                // used across the kernel
+                                // holds pointers to the running threads
 
 SynchronizedConsole* synchronizedConsole;
 //----------------------------------------------------------------------
@@ -37,19 +39,12 @@ StartProcess(const char *filename)
     synchronizedConsole = new SynchronizedConsole();
 
     OpenFile *executable = fileSystem->Open(filename);
-
     if (executable == NULL)
     {
         printf("Unable to open file %s\n", filename);
         return;
     }
 
-
-    AddrSpace* space = new AddrSpace(executable);   // a new address space (obviously !)
-    space->InitRegisters();		// set the initial register values
-    space->RestoreState();		// load page table register
-
-    currentThread->space = space;
     int returnValue = processTable->Alloc((void*)currentThread);
     currentThread->threadID = returnValue;
 
@@ -59,7 +54,10 @@ StartProcess(const char *filename)
         exit(1);
     }
 
-    delete executable;			// close file
+    AddrSpace* space = new AddrSpace(executable, returnValue);   // a new address space (obviously !)
+    currentThread->space = space;
+    space->InitRegisters();		// set the initial register values
+    space->RestoreState();		// load page table register
 
     machine->Run();			// jump to the user progam
     ASSERT(false);			// machine->Run never returns;

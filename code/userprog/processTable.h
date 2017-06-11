@@ -13,6 +13,8 @@ public:
 
     ProcessTable(int size);
 
+    ~ProcessTable();
+
     int Alloc(void* object);
 
     void* Get(int index);

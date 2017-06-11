@@ -24,6 +24,8 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#include "memoryManager.h"
+#include "processTable.h"
 #include "addrspace.h"
 #include "synchronizedConsole.h"
 #include "synch.h"
@@ -84,6 +86,8 @@ void SysCallExitHandler();
 void SysCallReadHandler();
 void SysCallWriteHandler();
 
+void PageFaultExceptionHandler();
+
 void
 ExceptionHandler(ExceptionType which)
 {
@@ -117,15 +121,16 @@ ExceptionHandler(ExceptionType which)
         default:
             break;
         }
+        ForwardPC(); // this has to be done after every instruction
         break;
 
     case PageFaultException:
-        printf("Page Fault Exception\n");
-        SysCallExitHandler();
+        // printf("PageFaultException\n");
+        PageFaultExceptionHandler();
         break;
 
     case ReadOnlyException:
-        printf("Read Onle Exception\n");
+        printf("Read Only Exception\n");
         SysCallExitHandler();
         break;
 
@@ -154,8 +159,6 @@ ExceptionHandler(ExceptionType which)
         SysCallExitHandler();
         break;
     }
-
-    ForwardPC(); // this has to be done after every instruction
 }
 
 void
@@ -171,24 +174,28 @@ SysCallHaltHandler()
 void
 SysCallExecHandler()
 {
-    char* fileName;
     int fileNameLength = machine->ReadRegister(5);
-    fileName = new char[fileNameLength + 1];
+    char* fileName = new char[fileNameLength + 1];
     // It is bad practice to create a fixed-size buffer.
-    // For example, char* fileName = new char[100].
+    // For example, char* fileName = new char[100] is bad.
     // Should get the length first and then initialize the buffer, ...
-    // ... ike I did here (like a boss :D ).
+    // ... like I did here (like a boss :D ).
 
     int addr = machine->ReadRegister(4);
     int i = 0;
-
     do
     {
-        machine->ReadMem(addr + i, 1, (int*)&fileName[i]);
+        if(!machine->ReadMem(addr + i, 1, (int*)&fileName[i]))
+        {
+            delete fileName;
+            fileNameLength = machine->ReadRegister(5);
+            fileName = new char[fileNameLength + 1];
 
+            machine->ReadMem(addr + i, 1, (int*)&fileName[i]);
+            // first ReadMem may fail since the page might not be in memory
+        }
     }
     while(fileName[i++] != '\0');
-
 
     OpenFile* executable = fileSystem->Open(fileName);
     if (executable == NULL)
@@ -198,10 +205,7 @@ SysCallExecHandler()
         return;
     }
 
-    AddrSpace* space = new AddrSpace(executable);
-
     Thread* thread = new Thread(fileName);
-    thread->space=space;
     int returnValue = processTable->Alloc((void*)thread);
     thread->threadID = returnValue;
     if(returnValue == -1)
@@ -210,10 +214,12 @@ SysCallExecHandler()
         return;
     }
 
+    AddrSpace* space = new AddrSpace(executable, returnValue);
+    thread->space=space;
+
     DEBUG('z', "%d inserted in processTable\n", thread->threadID);
     machine->WriteRegister(2, returnValue);
 
-    delete executable; // close file
     delete fileName;   // free the buffer memory storing the name
 
     thread->Fork(DummyForFork, NULL);
@@ -225,7 +231,10 @@ void
 SysCallExitHandler()
 {
     DEBUG('z',"Inside Exit\n");
-    int addr = machine->ReadRegister(4);
+    int exitCode = machine->ReadRegister(4);
+    printf("-------------------------------------\n");
+    printf("Exiting process: %d. Exit code: %d\n", currentThread->threadID, exitCode);
+    printf("-------------------------------------\n");
 
     currentThread->space->ReleaseMemory();
     delete currentThread->space;
@@ -241,7 +250,6 @@ SysCallExitHandler()
     // else
     currentThread->Finish();
 
-    printf("Exit : %d\n", currentThread->threadID);
     return;
 }
 
@@ -263,7 +271,11 @@ SysCallReadHandler()
     buffer[size] = '\0';
     for(int i = 0; i < size; i++)
     {
-        machine->WriteMem(addr + i,1, (int)buffer[i]);
+        if(!machine->WriteMem(addr + i,1, (int)buffer[i]))
+        {
+            machine->WriteMem(addr + i,1, (int)buffer[i]);
+            // first WriteMem may fail since the page might not be in memory
+        }
     }
 
     DEBUG('z', "Size of string = %d\n", size);
@@ -290,7 +302,11 @@ SysCallWriteHandler()
     for(int i = 0; i < size; i++)
     {
         int c;
-        machine->ReadMem(addr + i, 1, &c);
+        if(!machine->ReadMem(addr + i, 1, &c))
+        {
+            machine->ReadMem(addr + i, 1, &c);
+            // first ReadMem may fail since the page might not be in memory
+        }
         synchronizedConsole->PutChar((char)c);
     }
     synchronizedConsole->PutChar('\n');
@@ -298,4 +314,26 @@ SysCallWriteHandler()
     synchronizedConsole->ReleaseLock();
 
     return;
+}
+
+
+void
+PageFaultExceptionHandler()
+{
+    unsigned virtualAddress = machine->ReadRegister(BadVAddrReg); // register no. 39
+    // the address for which PageFaultException was raised
+
+    unsigned pageNumber = virtualAddress / PageSize;
+    // this page is to be loaded into main memory (RAM)
+
+    DEBUG('x', "\n\n\n");
+    DEBUG('x', "***********************************************************************\n");
+    DEBUG('x', "***********************************************************************\n\n");
+    DEBUG('x', "From exception.cc :\n");
+    DEBUG('x', "Page Fault\n");
+    DEBUG('x', "process: %d, virtAddr: %u, vpn: %u\n\n", currentThread->threadID, virtualAddress, pageNumber);
+
+    currentThread->space->LoadPage(pageNumber);
+
+    stats->numPageFaults++;
 }

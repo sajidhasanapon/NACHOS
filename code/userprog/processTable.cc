@@ -14,6 +14,11 @@ ProcessTable::ProcessTable(int size)
     tableSize = size;
 }
 
+ProcessTable::~ProcessTable()
+{
+    delete[] arrayOfThreadPointers;
+}
+
 int ProcessTable::Alloc(void* object)
 {
     processTableLock->Acquire();

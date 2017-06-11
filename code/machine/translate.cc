@@ -31,8 +31,11 @@
 
 #include "copyright.h"
 #include "machine.h"
+#include "memoryManager.h"
 #include "addrspace.h"
 #include "system.h"
+
+extern MemoryManager* memoryManager;
 
 // Routines for converting Words and Short Words to and from the
 // simulated machine's format of little endian.  These end up
@@ -118,6 +121,9 @@ Machine::ReadMem(int addr, int size, int *value)
     }
     
     DEBUG('a', "\tvalue read = %8.8x\n", *value);
+
+	memoryManager->UpdateLastAccessTime(physicalAddress / PageSize);
+
     return true;
 }
 
