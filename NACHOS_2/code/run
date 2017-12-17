@@ -1,0 +1,14 @@
+#!/bin/bash
+
+clear
+
+echo 'running '"$1""..."
+echo ""
+echo ""
+echo ""
+
+cd userprog
+./nachos -d e -x ../test/"$1"
+
+cd ..
+

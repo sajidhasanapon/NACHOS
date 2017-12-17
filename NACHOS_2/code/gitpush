@@ -1,0 +1,29 @@
+#!/bin/bash
+
+commit_description=$1
+
+if [ "$commit_description" == "" ]; then
+
+	tput setaf 1
+	tput bold
+	echo
+	echo "gitpush : You must enter a commit description"
+	echo
+	tput sgr0
+else
+	
+	git add .
+	git commit -m "$commit_description"		#Committing changes
+
+	tput setaf 2
+	tput bold
+	echo
+	echo "Commit Successful"
+
+	git push origin master				#Pushing to remote repository in github.com
+	echo "Github remote push successful"
+	echo
+	tput sgr0 
+fi
+
+
